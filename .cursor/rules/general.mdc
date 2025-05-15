@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Genel depo kuralları – dokümantasyon, sürümleme, CI/CD, adlandırma
+globs: ["**/*"]   # Tüm dosyalar
+alwaysApply: true # Dosya başına ek işaret gerekmeden daima yüklensin
+---
+
+# 1. Sürüm Kontrolü & Commit Disiplini
+- **Conventional Commits** formatı kullan: `type(scope?): subject`
+  - Yaygın türler: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `build`, `ci`.
+- Ana branch: `main`.  
+  Çalışma branch’leri:  
+  - Özellik: `feature/<ticket-id>-<konu>`  
+  - Düzeltme: `fix/<ticket-id>-<konu>`  
+  - Bakım: `chore/<konu>`
+- PR açılmadan önce:
+  1. `npm run lint && npm run test` (frontend)
+  2. `mvn -q test` (backend)
+- En az bir kod incelemesi (review) zorunlu; CI geçmediğinde merge engellenir.
+
+# 2. Dizin ve Dosya Adlandırma
+- **Klasörler**: kebab-case (örn. `user-profile/`).
+- **Dosyalar**:  
+  - Java: `PascalCase.java`  
+  - TypeScript/React: `PascalCase.tsx` (bileşen) veya `kebab-case.ts` (yardımcı).
+- **Dokümantasyon**: `docs/*.md` ile kökte `README.md`.
+- Paket adları:
+  - Java: `com.bidbridge.<modül>`  
+  - TypeScript: `@/lib/<altkütüphane>` alias.
+
+# 3. Kod Kalitesi & Stil
+- **Frontend**: ESLint (Airbnb base + React), Prettier, Husky pre-commit hook.
+- **Backend**: Spotless + Google Java Format 1.17; Maven profile `format` ile otomatik çalıştır.
+- **Test Eşikleri**  
+  - Frontend: min. `%70` line coverage (Jest).  
+  - Backend: min. `%80` line coverage (JaCoCo).  
+  CI başarısız olduğunda PR bloklanır.
+
+# 4. Ortam Değişkenleri & Gizli Bilgiler
+- `/.env.example` şablon; asla gerçek değer commit’leme.  
+- CI ortam değişkenleri GitHub Secrets üzerinden gelir.  
+- `.cursorignore` + `.gitignore` dosyalarında: `*.key`, `*.pem`, `*.crt`, `*.env*`, `node_modules/`, `backend/target/`, `backend/build/`.
+
+# 5. Docker & Local Geliştirme
+- Her katman için ayrı Dockerfile; root’ta `docker-compose.yml` ile ortak orkestrasyon.
+- **Ports**:  
+  - Frontend: `3000`  
+  - Backend: `8080`  
+  - Postgres: `5432`
+- Docker image tag’leri: `app:<semver>-<git-sha>`; “latest” **kullanma**.
+
+# 6. Dokümantasyon Standardı
+- Tüm önemli kararlar `docs/architecture.md` ve `docs/tech_stack.md`’de izlenir.  
+- Diyagramlar `.drawio` veya mermaid. Değişiklik sonrası PR açıklamasında “Architecture updated” ibaresi.
+- README rozetleri: build status, coverage, license.
+
+# 7. Lisans & Telif
+- Depo kökünde `LICENSE` (MIT).  
+- Üçüncü taraf kod eklendiğinde `docs/THIRD_PARTY.md` dosyasına kaydet.
+
+# 8. Uluslararasılaştırma (i18n) – Opsiyonel
+- Varsayılan dil `en-US`.  
+- UI metinleri `src/locales/en.json`, `src/locales/tr.json` dosyalarında tutulur; string literal kullanma.
+
+# 9. Otomatik Güncellemeler
+- Dependabot etkin: `npm`, `Maven`, `Docker` ekosistemleri için haftalık PR.
+- CI workflow dosyaları `.github/workflows/` altında; değişiklik öncesi “workflow approval” gerekir.
+
+---

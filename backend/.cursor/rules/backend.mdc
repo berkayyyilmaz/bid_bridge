@@ -1,0 +1,41 @@
+---
+description: 
+globs: backend/*
+alwaysApply: false
+---
+---
+description: Java 17 Spring Boot backend kod kuralları
+globs: ["backend/**/*.java", "backend/**/*.kt"]
+---
+
+# Build Aracı
+- **Maven** kullan; kökte `pom.xml` olmalı.
+- Parent: `<groupId>org.springframework.boot</groupId>`  
+           `<artifactId>spring-boot-starter-parent</artifactId>`  
+           `<version>3.3.0</version>`
+- Modul yapısı yoksa tek pom yeter; çok-modüllü projede kök pom + child pom’lar.
+
+# Dil & Derleyici
+- Java 17 zorunlu. Preview özelliği kullanma.
+- Lombok eklentisi `spring-boot-starter-parent` ile çalışacak şekilde `dependencyManagement` altında versiyon yönetimi yap.
+
+# Mimari
+- Katman sırası: **controller → service → repository → entity**.
+- İş mantığı *yalnızca* service katmanında olsun; controller’da null kontrolü dışında mantık kalmasın.
+- Varlık isimleri `PascalCase`; tablo isimleri `snake_case`.
+
+# Spring & JPA
+- Repository arayüzleri `JpaRepository<Entity; Long>` uzantısı olsun.
+- Lazy-load tuzağını önlemek için DTO projeksiyonu kullan veya `@EntityGraph`.
+- N+1 sorgu görülürse service testine “should not exceed X queries” assert’i ekle.
+
+# Validation & Error
+- Giriş DTO’larında `@jakarta.validation.*` anotasyonları kullan; global `@ControllerAdvice` ile hata gövdesini tek tip döndür.
+
+# Test
+- Her public service metoduna karşılık bir ünite testi zorunlu.
+- En az %80 line coverage; Jacoco raporu CI’da fail’e bağlanır.
+
+# Stil
+- Google Java Format (v1.17) otomatik çalıştırılsın.
+- Lombok: yalnız `@Getter`, `@Setter`, `@Builder`, `@NoArgsConstructor`, `@AllArgsConstructor` kullan; `@Data` **kullanma**.

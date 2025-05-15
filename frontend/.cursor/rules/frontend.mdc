@@ -1,0 +1,16 @@
+---
+description: 
+globs: frontend/*
+alwaysApply: false
+---
+---
+description: Frontend kod standartları
+globs: ["frontend/**/*.{ts,tsx}"]
+alwaysApply: false          # Auto-Attached: sadece eşleşen dosyalarda
+---
+
+- React 18 + TypeScript kullan.
+- Tüm bileşenler **function component** olsun.
+- Stil için **TailwindCSS** sınıfları ve shadcn/ui bileşenleri kullan.
+- HTTP için axios yerine fetch API + typed wrappers kullan.
+- Testleri `frontend/__tests__` altında Jest + React Testing Library ile yaz.

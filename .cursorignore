@@ -1,0 +1,25 @@
+# Ortak
+.git/
+.gitignore
+.DS_Store
+.env*
+*.pem
+*.key
+*.crt
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+coverage/
+*.log
+
+# Java / Backend
+backend/build/
+backend/target/
+*.iml
+.idea/
+
+# Dokümantasyon çıktıları
+docs/**/*.drawio
+docs/**/*.png
