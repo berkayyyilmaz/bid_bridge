@@ -5,12 +5,13 @@ alwaysApply: false
 ---
 ---
 description: Frontend kod standartları
-globs: ["frontend/**/*.{ts,tsx}"]
+globs: ["frontend/**/*.{ts,tsx,js,jsx}"]
 alwaysApply: false          # Auto-Attached: sadece eşleşen dosyalarda
 ---
 
-- React 18 + TypeScript kullan.
+- Next.js (React 18) + TypeScript kullan.
 - Tüm bileşenler **function component** olsun.
-- Stil için **TailwindCSS** sınıfları ve shadcn/ui bileşenleri kullan.
-- HTTP için axios yerine fetch API + typed wrappers kullan.
-- Testleri `frontend/__tests__` altında Jest + React Testing Library ile yaz.
+- Stil için **TailwindCSS** sınıfları ve **shadcn/ui** bileşenleri kullan.
+- **Veri fetch** işlemleri için **fetch API + typed wrappers** tercih et (axios kullanılmaz).
+- **Veri yönetimi** ve **server state** için **TanStack Query (React Query)** kullan.
+- Testleri `frontend/__tests__` altında **Jest + React Testing Library** ile yaz.ß

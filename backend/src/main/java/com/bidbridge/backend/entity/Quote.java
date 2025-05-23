@@ -1,10 +1,10 @@
-
 package com.bidbridge.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.time.LocalDate;
 import java.time.Instant;
@@ -27,7 +27,8 @@ public class Quote {
     @JoinColumn(name = "offering_company_id")
     private Company offeringCompany;
 
-    private Double price;
+    @Column(columnDefinition = "NUMERIC")
+    private BigDecimal price;
     private String currency;
     private Integer transitTime;
     private LocalDate validUntil;

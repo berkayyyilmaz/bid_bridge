@@ -1,6 +1,5 @@
 # Ortak
 .git/
-.gitignore
 .DS_Store
 .env*
 *.pem
@@ -8,7 +7,6 @@
 *.crt
 
 # Node / Frontend
-node_modules/
 .next/
 out/
 coverage/

@@ -1,4 +1,3 @@
-
 package com.bidbridge.backend.entity;
 
 import jakarta.persistence.*;
@@ -24,7 +23,7 @@ public class Notification {
 
     private String type;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "JSONB")
     private String data;
 
     private Boolean isRead = false;
