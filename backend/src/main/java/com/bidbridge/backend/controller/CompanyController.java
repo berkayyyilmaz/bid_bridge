@@ -63,10 +63,9 @@ public class CompanyController {
     @GetMapping("/me")
     @Operation(summary = "Mevcut kullanıcının şirketini getir", description = "Token'da bulunan kullanıcının şirketini döndürür")
     public ResponseEntity<CompanyDTO> getCurrentUserCompany() {
-        // SecurityContextHolder'dan kullanıcı e-postasını al
-        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        // SecurityContextHolder'dan profile ID'sini al (Supabase Auth)
+        String profileId = SecurityContextHolder.getContext().getAuthentication().getName();
         
-        // Servis katmanında bu metodu oluşturmalısınız
-        return ResponseEntity.ok(companyService.findByUserEmail(userEmail));
+        return ResponseEntity.ok(companyService.findByProfileId(UUID.fromString(profileId)));
     }
 } 

@@ -6,5 +6,5 @@ import java.util.UUID;
 
 public interface CompanyService extends BaseService<CompanyDTO, UUID> {
     CompanyDTO findByName(String name);
-    CompanyDTO findByUserEmail(String email);
+    CompanyDTO findByProfileId(UUID profileId);
 } 

@@ -6,6 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface NotificationService extends BaseService<NotificationDTO, UUID> {
-    List<NotificationDTO> findByUserId(UUID userId);
-    List<NotificationDTO> findByUserIdAndIsRead(UUID userId, boolean isRead);
+    List<NotificationDTO> findByProfileId(UUID profileId);
+    List<NotificationDTO> findByProfileIdAndIsRead(UUID profileId, boolean isRead);
 } 

@@ -6,12 +6,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-public class UserDTO {
+public class ProfileDTO {
     private UUID id;
-    private String email;
-    private String fullName;
     private String role;
     private UUID companyId;
     private String companyName;
     private Instant createdAt;
+    private Instant updatedAt;
 } 

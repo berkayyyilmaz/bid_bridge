@@ -8,15 +8,14 @@ import org.mapstruct.MappingConstants;
 
 import java.util.List;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {UserMapper.class})
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface NotificationMapper {
     
-    @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.email", target = "userEmail")
+    @Mapping(source = "profile.id", target = "profileId")
     NotificationDTO toDTO(Notification notification);
     
     List<NotificationDTO> toDTOList(List<Notification> notifications);
     
-    @Mapping(source = "userId", target = "user.id")
+    @Mapping(source = "profileId", target = "profile.id")
     Notification toEntity(NotificationDTO dto);
 } 

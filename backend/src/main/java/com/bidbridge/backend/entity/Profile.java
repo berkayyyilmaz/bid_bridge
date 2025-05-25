@@ -13,21 +13,13 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "users", schema = "public")
+@Table(name = "profiles", schema = "public")
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class Profile {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    private UUID id; // This will be the same as auth.users.id from Supabase
 
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String passwordHash;
-
-    private String fullName;
     private String role;
 
     @ManyToOne
@@ -41,4 +33,4 @@ public class User {
     @LastModifiedDate
     @Column(nullable = false)
     private Instant updatedAt;
-}
+} 

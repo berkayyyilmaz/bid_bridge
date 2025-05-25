@@ -4,11 +4,14 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'http://localhost:8080/api/:path*', // Proxy to Backend
+        source: "/api/:path*",
+        destination: "http://localhost:8080/:path*",
       },
-    ]
-  }
+    ];
+  },
+  images: {
+    domains: ["localhost"],
+  },
 };
 
-export default nextConfig; 
+export default nextConfig;

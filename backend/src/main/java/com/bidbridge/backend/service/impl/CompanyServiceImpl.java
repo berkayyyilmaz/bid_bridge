@@ -2,10 +2,10 @@ package com.bidbridge.backend.service.impl;
 
 import com.bidbridge.backend.dto.CompanyDTO;
 import com.bidbridge.backend.entity.Company;
-import com.bidbridge.backend.entity.User;
+import com.bidbridge.backend.entity.Profile;
 import com.bidbridge.backend.mapper.CompanyMapper;
 import com.bidbridge.backend.repository.CompanyRepository;
-import com.bidbridge.backend.repository.UserRepository;
+import com.bidbridge.backend.repository.ProfileRepository;
 import com.bidbridge.backend.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,13 @@ public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
-    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
 
     @Autowired
-    public CompanyServiceImpl(CompanyRepository companyRepository, CompanyMapper companyMapper, UserRepository userRepository) {
+    public CompanyServiceImpl(CompanyRepository companyRepository, CompanyMapper companyMapper, ProfileRepository profileRepository) {
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
-        this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
     }
 
     @Override
@@ -74,14 +74,14 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CompanyDTO findByUserEmail(String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    public CompanyDTO findByProfileId(UUID profileId) {
+        Profile profile = profileRepository.findById(profileId)
+            .orElseThrow(() -> new RuntimeException("Profile not found with id: " + profileId));
         
-        if (user.getCompany() == null) {
-            throw new RuntimeException("User doesn't have a company");
+        if (profile.getCompany() == null) {
+            throw new RuntimeException("Profile doesn't have a company");
         }
         
-        return companyMapper.toDTO(user.getCompany());
+        return companyMapper.toDTO(profile.getCompany());
     }
 } 

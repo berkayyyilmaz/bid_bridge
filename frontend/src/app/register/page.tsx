@@ -8,46 +8,60 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/custom/Button";
 import { Input } from "@/components/custom/Input";
-import { Checkbox } from "@/components/custom/Checkbox";
 import supabaseAuthService from "@/lib/services/supabaseAuthService";
 import AuthGuard from "@/components/auth/AuthGuard";
 
 // Form validation schema
-const loginSchema = z.object({
-  email: z.string().email("Geçerli bir email adresi giriniz"),
-  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
-  rememberMe: z.boolean().optional(),
-});
+const registerSchema = z
+  .object({
+    companyName: z.string().min(2, "Şirket adı en az 2 karakter olmalıdır"),
+    fullName: z.string().min(2, "Ad soyad en az 2 karakter olmalıdır"),
+    email: z.string().email("Geçerli bir email adresi giriniz"),
+    password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+    confirmPassword: z
+      .string()
+      .min(6, "Şifre tekrarı en az 6 karakter olmalıdır"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Şifreler eşleşmiyor",
+    path: ["confirmPassword"],
+  });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Initialize React Hook Form
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      companyName: "",
+      fullName: "",
       email: "",
       password: "",
-      rememberMe: false,
+      confirmPassword: "",
     },
   });
 
   // Handle form submission
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     try {
       setApiError(null);
+      setSuccessMessage(null);
 
-      // Supabase auth ile giriş yap
-      const result = await supabaseAuthService.login({
+      // Supabase auth ile kayıt ol
+      const result = await supabaseAuthService.register({
         email: data.email,
         password: data.password,
+        fullName: data.fullName,
+        companyName: data.companyName,
       });
 
       if (result.error) {
@@ -56,20 +70,25 @@ export default function LoginPage() {
       }
 
       if (result.user) {
-        // Başarılı giriş - dashboard'a yönlendir
-        router.push("/dashboard");
+        setSuccessMessage(
+          "Kayıt başarılı! Email adresinizi doğruladıktan sonra giriş yapabilirsiniz."
+        );
+        // 3 saniye sonra login sayfasına yönlendir
+        setTimeout(() => {
+          router.push("/login");
+        }, 3000);
       } else {
-        setApiError("Giriş başarısız oldu");
+        setApiError("Kayıt başarısız oldu");
       }
     } catch (error: any) {
-      console.error("Login failed:", error);
+      console.error("Register failed:", error);
       setApiError("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.");
     }
   };
 
-  // Register sayfasına yönlendir
-  const handleRegisterClick = () => {
-    router.push("/register");
+  // Login sayfasına yönlendir
+  const handleLoginClick = () => {
+    router.push("/login");
   };
 
   return (
@@ -92,7 +111,7 @@ export default function LoginPage() {
           {/* Form Container */}
           <div className="flex flex-grow flex-col justify-center">
             <div className="w-full max-w-md">
-              <h1 className="mb-8 text-4xl font-bold">Hoş Geldiniz,</h1>
+              <h1 className="mb-8 text-4xl font-bold">Kayıt Ol</h1>
 
               {apiError && (
                 <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
@@ -100,7 +119,29 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {successMessage && (
+                <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-600">
+                  {successMessage}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <Input
+                  label="Şirket Adı"
+                  {...register("companyName")}
+                  type="text"
+                  placeholder="Şirket adınızı giriniz"
+                  error={errors.companyName?.message}
+                />
+
+                <Input
+                  label="Ad Soyad"
+                  {...register("fullName")}
+                  type="text"
+                  placeholder="Adınızı ve soyadınızı giriniz"
+                  error={errors.fullName?.message}
+                />
+
                 <Input
                   label="Email"
                   {...register("email")}
@@ -113,45 +154,39 @@ export default function LoginPage() {
                   label="Şifre"
                   {...register("password")}
                   type="password"
-                  placeholder="********"
+                  placeholder="En az 6 karakter"
                   error={errors.password?.message}
                 />
 
-                <div className="flex items-center justify-between pt-2">
-                  <Checkbox
-                    label="Beni hatırla"
-                    color="green"
-                    {...register("rememberMe")}
-                  />
-                  <a
-                    href="#"
-                    className="text-sm text-green-700 hover:underline"
-                  >
-                    Şifremi Unuttum?
-                  </a>
-                </div>
+                <Input
+                  label="Şifre Tekrarı"
+                  {...register("confirmPassword")}
+                  type="password"
+                  placeholder="Şifrenizi tekrar giriniz"
+                  error={errors.confirmPassword?.message}
+                />
 
                 <div className="pt-6 text-center">
                   <Button
                     customVariant="primary"
                     customSize="md"
                     type="submit"
-                    className="w-1/3"
+                    className="w-1/2"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
+                    {isSubmitting ? "Kayıt yapılıyor..." : "Kayıt Ol"}
                   </Button>
                 </div>
 
                 <div className="pt-4 text-center">
                   <p className="text-sm text-gray-600">
-                    Hesabınız yok mu?{" "}
+                    Zaten hesabınız var mı?{" "}
                     <button
                       type="button"
-                      onClick={handleRegisterClick}
+                      onClick={handleLoginClick}
                       className="text-green-700 hover:underline font-medium"
                     >
-                      Kayıt Ol
+                      Giriş Yap
                     </button>
                   </p>
                 </div>
@@ -164,7 +199,7 @@ export default function LoginPage() {
         <div className="relative w-2/3">
           <Image
             src="/images/login_background.jpg"
-            alt="Login Background"
+            alt="Register Background"
             fill
             style={{ objectFit: "cover", objectPosition: "bottom" }}
             priority

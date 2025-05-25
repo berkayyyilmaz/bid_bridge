@@ -1,10 +1,9 @@
 package com.bidbridge.backend.service;
 
-import com.bidbridge.backend.dto.LoginRequestDTO;
-import com.bidbridge.backend.dto.LoginResponseDTO;
-import com.bidbridge.backend.dto.RegisterRequestDTO;
+import com.bidbridge.backend.dto.ProfileDTO;
+import java.util.UUID;
 
 public interface AuthService {
-    LoginResponseDTO login(LoginRequestDTO loginRequest);
-    LoginResponseDTO register(RegisterRequestDTO registerRequest);
+    ProfileDTO createProfileFromSupabaseUser(UUID supabaseProfileId, String role, UUID companyId);
+    ProfileDTO getCurrentUserProfile(UUID supabaseProfileId);
 } 

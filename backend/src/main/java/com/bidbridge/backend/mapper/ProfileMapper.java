@@ -1,7 +1,7 @@
 package com.bidbridge.backend.mapper;
 
-import com.bidbridge.backend.dto.UserDTO;
-import com.bidbridge.backend.entity.User;
+import com.bidbridge.backend.dto.ProfileDTO;
+import com.bidbridge.backend.entity.Profile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -9,14 +9,14 @@ import org.mapstruct.MappingConstants;
 import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {CompanyMapper.class})
-public interface UserMapper {
+public interface ProfileMapper {
     
     @Mapping(source = "company.id", target = "companyId")
     @Mapping(source = "company.name", target = "companyName")
-    UserDTO toDTO(User user);
+    ProfileDTO toDTO(Profile profile);
     
-    List<UserDTO> toDTOList(List<User> users);
+    List<ProfileDTO> toDTOList(List<Profile> profiles);
     
     @Mapping(source = "companyId", target = "company.id")
-    User toEntity(UserDTO dto);
+    Profile toEntity(ProfileDTO dto);
 } 

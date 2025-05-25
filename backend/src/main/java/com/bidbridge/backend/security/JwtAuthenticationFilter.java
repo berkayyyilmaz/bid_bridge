@@ -16,16 +16,21 @@ import java.util.Collections;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final SupabaseJwtService supabaseJwtService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
-        this.jwtService = jwtService;
+    public JwtAuthenticationFilter(SupabaseJwtService supabaseJwtService) {
+        this.supabaseJwtService = supabaseJwtService;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.equals("/auth/login") || path.equals("/auth/register");
+        // Auth endpoint'leri ve public endpoint'leri filtreden geçirme
+        return path.equals("/auth/login") || 
+               path.equals("/auth/register") ||
+               path.startsWith("/swagger-ui") ||
+               path.startsWith("/v3/api-docs") ||
+               path.equals("/api-docs");
     }
 
     @Override
@@ -44,21 +49,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
         
         try {
-            final String userEmail = jwtService.extractUsername(jwt);
-            
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtService.isTokenValid(jwt)) {
-                    String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
+            // Supabase JWT token'ını doğrula
+            if (supabaseJwtService.isTokenValid(jwt)) {
+                final String userId = supabaseJwtService.extractUserId(jwt);
+                final String email = supabaseJwtService.extractEmail(jwt);
+                final String role = supabaseJwtService.extractRole(jwt);
+                
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Authentication object oluştur
+                    // Principal olarak userId kullan (Supabase user ID)
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userEmail,
-                            null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                            userId, // Principal: Supabase user ID
+                            email,  // Credentials: Email
+                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + (role != null ? role.toUpperCase() : "USER")))
                     );
+                    
+                    // Security context'e set et
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            logger.error("Token validation error", e);
+            logger.error("Supabase JWT token validation error", e);
+            // Token geçersizse authentication'ı null bırak
+            SecurityContextHolder.clearContext();
         }
         
         filterChain.doFilter(request, response);

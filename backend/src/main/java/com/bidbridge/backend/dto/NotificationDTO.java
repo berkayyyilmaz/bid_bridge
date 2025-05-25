@@ -8,8 +8,7 @@ import java.util.UUID;
 @Data
 public class NotificationDTO {
     private UUID id;
-    private UUID userId;
-    private String userEmail;
+    private UUID profileId;
     private String type;
     private String data;
     private boolean isRead;

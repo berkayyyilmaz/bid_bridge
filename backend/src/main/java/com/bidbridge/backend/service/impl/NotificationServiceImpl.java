@@ -64,12 +64,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<NotificationDTO> findByUserId(UUID userId) {
-        return notificationMapper.toDTOList(notificationRepository.findByUserId(userId));
+    public List<NotificationDTO> findByProfileId(UUID profileId) {
+        return notificationMapper.toDTOList(notificationRepository.findByProfileId(profileId));
     }
 
     @Override
-    public List<NotificationDTO> findByUserIdAndIsRead(UUID userId, boolean isRead) {
-        return notificationMapper.toDTOList(notificationRepository.findByUserIdAndIsRead(userId, isRead));
+    public List<NotificationDTO> findByProfileIdAndIsRead(UUID profileId, boolean isRead) {
+        return notificationMapper.toDTOList(notificationRepository.findByProfileIdAndIsRead(profileId, isRead));
     }
 } 

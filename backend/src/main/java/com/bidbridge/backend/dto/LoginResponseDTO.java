@@ -13,9 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LoginResponseDTO {
     private String token;
-    private UUID userId;
-    private String email;
-    private String fullName;
+    private UUID profileId;
     private String role;
     private UUID companyId;
     private String companyName;
