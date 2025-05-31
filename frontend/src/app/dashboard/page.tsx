@@ -9,41 +9,33 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import CompaniesTable from "@/components/tables/CompaniesTable"; // This will be created next
-
-// Mock data for the companies table
-const mockCompanies = [
-  {
-    id: "1",
-    name: "Logistics Inc.",
-    contact: "John Doe",
-    email: "john@logistics.com",
-    status: "Active",
-  },
-  {
-    id: "2",
-    name: "Transport Co.",
-    contact: "Jane Smith",
-    email: "jane@transport.co",
-    status: "Active",
-  },
-  {
-    id: "3",
-    name: "ShipFast Ltd.",
-    contact: "Mike Brown",
-    email: "mike@shipfast.com",
-    status: "Inactive",
-  },
-  {
-    id: "4",
-    name: "Global Movers",
-    contact: "Sarah Wilson",
-    email: "sarah@globalmovers.net",
-    status: "Active",
-  },
-];
+import { DataTable } from "@/components/ui/data-table";
+import { useTableData } from "@/hooks/use-table-data";
+import { Company, transformCompanyFromApi } from "@/types/company";
+import { createTableConfig } from "@/config/field-mappings";
+import backendApiService from "@/lib/services/backendApiService";
 
 export default function DashboardPage() {
+  const {
+    data: companiesApi,
+    loading,
+    error,
+  } = useTableData(() => backendApiService.getCompanies());
+
+  // API'den gelen veriyi frontend formatına dönüştür
+  const companies: Company[] = companiesApi?.map(transformCompanyFromApi) || [];
+
+  // Companies tablosu için konfigürasyon
+  const tableConfig = createTableConfig<Company>(
+    "companies",
+    ["name", "created_at"],
+    {
+      pageSize: 5,
+      exportable: true,
+      searchable: true,
+    }
+  );
+
   return (
     <AuthGuard requireAuth={true}>
       <AppLayout>
@@ -67,11 +59,21 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Şirketler Genel Bakış</CardTitle>
               <CardDescription>
-                Sistemdeki şirketlere hızlı bir bakış. (Örnek Veri)
+                Sistemdeki şirketlere hızlı bir bakış.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CompaniesTable data={mockCompanies} />
+              {error ? (
+                <div className="text-red-500 text-center py-4">
+                  Hata: {error}
+                </div>
+              ) : (
+                <DataTable<Company>
+                  data={companies}
+                  config={tableConfig}
+                  loading={loading}
+                />
+              )}
             </CardContent>
           </Card>
         </div>

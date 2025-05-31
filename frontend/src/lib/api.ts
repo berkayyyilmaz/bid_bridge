@@ -1,8 +1,8 @@
 import axios from "axios";
 import { supabase } from "@/lib/supabase";
 
-// API Base URL - Using relative URL to leverage Next.js proxy
-const API_BASE_URL = "/api"; // Empty string for relative paths
+// API Base URL - Backend server address
+const API_BASE_URL = "http://localhost:8080/api";
 
 // Create axios instance with default config
 const api = axios.create({
@@ -17,6 +17,10 @@ api.interceptors.request.use(async (config) => {
   // Only add token in browser environment
   if (typeof window !== "undefined") {
     try {
+      // GEÇICI: Token göndermeyi durdur - JWT signature sorunu için
+      console.log("Token sending temporarily disabled");
+
+      /* 
       // Supabase token'ını al
       const {
         data: { session },
@@ -26,6 +30,7 @@ api.interceptors.request.use(async (config) => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      */
     } catch (error) {
       console.error("Error getting Supabase token:", error);
     }

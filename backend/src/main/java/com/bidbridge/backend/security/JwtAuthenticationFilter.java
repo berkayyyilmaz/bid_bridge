@@ -9,6 +9,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -16,6 +18,7 @@ import java.util.Collections;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final SupabaseJwtService supabaseJwtService;
 
     public JwtAuthenticationFilter(SupabaseJwtService supabaseJwtService) {
@@ -41,12 +44,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         
+        logger.debug("Processing request to: {}", request.getServletPath());
+        logger.debug("Authorization header present: {}", authHeader != null);
+        
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.debug("No valid Authorization header found");
             filterChain.doFilter(request, response);
             return;
         }
 
         final String jwt = authHeader.substring(7);
+        logger.debug("JWT token extracted, length: {}", jwt.length());
         
         try {
             // Supabase JWT token'ını doğrula
@@ -55,21 +63,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final String email = supabaseJwtService.extractEmail(jwt);
                 final String role = supabaseJwtService.extractRole(jwt);
                 
+                logger.debug("Token validation successful - UserId: {}, Email: {}, Role: {}", userId, email, role);
+                
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Supabase role'ünü Spring Security role'üne dönüştür
+                    String springRole = "USER"; // Default role
+                    if ("authenticated".equals(role)) {
+                        springRole = "USER";
+                    } else if ("admin".equals(role)) {
+                        springRole = "ADMIN";
+                    }
+                    
                     // Authentication object oluştur
-                    // Principal olarak userId kullan (Supabase user ID)
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userId, // Principal: Supabase user ID
                             email,  // Credentials: Email
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + (role != null ? role.toUpperCase() : "USER")))
+                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + springRole))
                     );
                     
                     // Security context'e set et
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    logger.debug("Authentication set successfully for user: {}", userId);
                 }
+            } else {
+                logger.warn("Token validation failed");
             }
         } catch (Exception e) {
-            logger.error("Supabase JWT token validation error", e);
+            logger.error("Supabase JWT token validation error: {}", e.getMessage(), e);
             // Token geçersizse authentication'ı null bırak
             SecurityContextHolder.clearContext();
         }

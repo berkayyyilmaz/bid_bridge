@@ -5,9 +5,6 @@ import { supabase } from "@/lib/supabase";
 interface Company {
   id: string;
   name: string;
-  address?: string;
-  contactEmail?: string;
-  contactPhone?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,28 +48,6 @@ interface Notification {
 }
 
 class BackendApiService {
-  /**
-   * Supabase token'ını header'a ekle
-   */
-  private async getAuthHeaders(): Promise<Record<string, string>> {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      return {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
-    } catch (error) {
-      console.error("Get auth headers error:", error);
-      return {
-        "Content-Type": "application/json",
-      };
-    }
-  }
-
   // ============ COMPANY API'LERİ ============
 
   /**
@@ -80,8 +55,7 @@ class BackendApiService {
    */
   async getCompanies(): Promise<Company[]> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Company[]>("/companies", { headers });
+      const response = await api.get<Company[]>("/companies");
       return response.data;
     } catch (error) {
       console.error("Get companies error:", error);
@@ -94,8 +68,7 @@ class BackendApiService {
    */
   async getCompany(id: string): Promise<Company> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Company>(`/companies/${id}`, { headers });
+      const response = await api.get<Company>(`/companies/${id}`);
       return response.data;
     } catch (error) {
       console.error("Get company error:", error);
@@ -110,10 +83,7 @@ class BackendApiService {
     company: Omit<Company, "id" | "createdAt" | "updatedAt">
   ): Promise<Company> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.post<Company>("/companies", company, {
-        headers,
-      });
+      const response = await api.post<Company>("/companies", company);
       return response.data;
     } catch (error) {
       console.error("Create company error:", error);
@@ -126,10 +96,7 @@ class BackendApiService {
    */
   async updateCompany(id: string, company: Partial<Company>): Promise<Company> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.put<Company>(`/companies/${id}`, company, {
-        headers,
-      });
+      const response = await api.put<Company>(`/companies/${id}`, company);
       return response.data;
     } catch (error) {
       console.error("Update company error:", error);
@@ -142,8 +109,7 @@ class BackendApiService {
    */
   async deleteCompany(id: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      await api.delete(`/companies/${id}`, { headers });
+      await api.delete(`/companies/${id}`);
     } catch (error) {
       console.error("Delete company error:", error);
       throw error;
@@ -157,8 +123,7 @@ class BackendApiService {
    */
   async getJobs(): Promise<Job[]> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Job[]>("/jobs", { headers });
+      const response = await api.get<Job[]>("/jobs");
       return response.data;
     } catch (error) {
       console.error("Get jobs error:", error);
@@ -171,10 +136,7 @@ class BackendApiService {
    */
   async getJobsByCompany(companyId: string): Promise<Job[]> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Job[]>(`/jobs/company/${companyId}`, {
-        headers,
-      });
+      const response = await api.get<Job[]>(`/jobs/company/${companyId}`);
       return response.data;
     } catch (error) {
       console.error("Get jobs by company error:", error);
@@ -187,8 +149,7 @@ class BackendApiService {
    */
   async getJob(id: string): Promise<Job> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Job>(`/jobs/${id}`, { headers });
+      const response = await api.get<Job>(`/jobs/${id}`);
       return response.data;
     } catch (error) {
       console.error("Get job error:", error);
@@ -203,8 +164,7 @@ class BackendApiService {
     job: Omit<Job, "id" | "createdAt" | "updatedAt">
   ): Promise<Job> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.post<Job>("/jobs", job, { headers });
+      const response = await api.post<Job>("/jobs", job);
       return response.data;
     } catch (error) {
       console.error("Create job error:", error);
@@ -217,8 +177,7 @@ class BackendApiService {
    */
   async updateJob(id: string, job: Partial<Job>): Promise<Job> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.put<Job>(`/jobs/${id}`, job, { headers });
+      const response = await api.put<Job>(`/jobs/${id}`, job);
       return response.data;
     } catch (error) {
       console.error("Update job error:", error);
@@ -231,8 +190,7 @@ class BackendApiService {
    */
   async deleteJob(id: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      await api.delete(`/jobs/${id}`, { headers });
+      await api.delete(`/jobs/${id}`);
     } catch (error) {
       console.error("Delete job error:", error);
       throw error;
@@ -246,10 +204,7 @@ class BackendApiService {
    */
   async getQuotesByJob(jobId: string): Promise<Quote[]> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Quote[]>(`/quotes/job/${jobId}`, {
-        headers,
-      });
+      const response = await api.get<Quote[]>(`/quotes/job/${jobId}`);
       return response.data;
     } catch (error) {
       console.error("Get quotes by job error:", error);
@@ -262,10 +217,7 @@ class BackendApiService {
    */
   async getQuotesByCompany(companyId: string): Promise<Quote[]> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get<Quote[]>(`/quotes/company/${companyId}`, {
-        headers,
-      });
+      const response = await api.get<Quote[]>(`/quotes/company/${companyId}`);
       return response.data;
     } catch (error) {
       console.error("Get quotes by company error:", error);
@@ -280,8 +232,7 @@ class BackendApiService {
     quote: Omit<Quote, "id" | "createdAt" | "updatedAt">
   ): Promise<Quote> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.post<Quote>("/quotes", quote, { headers });
+      const response = await api.post<Quote>("/quotes", quote);
       return response.data;
     } catch (error) {
       console.error("Create quote error:", error);
@@ -294,10 +245,7 @@ class BackendApiService {
    */
   async updateQuote(id: string, quote: Partial<Quote>): Promise<Quote> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.put<Quote>(`/quotes/${id}`, quote, {
-        headers,
-      });
+      const response = await api.put<Quote>(`/quotes/${id}`, quote);
       return response.data;
     } catch (error) {
       console.error("Update quote error:", error);
@@ -310,8 +258,7 @@ class BackendApiService {
    */
   async deleteQuote(id: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      await api.delete(`/quotes/${id}`, { headers });
+      await api.delete(`/quotes/${id}`);
     } catch (error) {
       console.error("Delete quote error:", error);
       throw error;
@@ -325,10 +272,8 @@ class BackendApiService {
    */
   async getNotifications(profileId: string): Promise<Notification[]> {
     try {
-      const headers = await this.getAuthHeaders();
       const response = await api.get<Notification[]>(
-        `/notifications/profile/${profileId}`,
-        { headers }
+        `/notifications/profile/${profileId}`
       );
       return response.data;
     } catch (error) {
@@ -342,8 +287,7 @@ class BackendApiService {
    */
   async markNotificationAsRead(id: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      await api.put(`/notifications/${id}/read`, {}, { headers });
+      await api.put(`/notifications/${id}/read`);
     } catch (error) {
       console.error("Mark notification as read error:", error);
       throw error;
@@ -355,12 +299,7 @@ class BackendApiService {
    */
   async markAllNotificationsAsRead(profileId: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      await api.put(
-        `/notifications/profile/${profileId}/read-all`,
-        {},
-        { headers }
-      );
+      await api.put(`/notifications/profile/${profileId}/read-all`);
     } catch (error) {
       console.error("Mark all notifications as read error:", error);
       throw error;
@@ -374,8 +313,7 @@ class BackendApiService {
    */
   async getProfile(userId: string): Promise<any> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.get(`/profiles/${userId}`, { headers });
+      const response = await api.get(`/profiles/${userId}`);
       return response.data;
     } catch (error) {
       console.error("Get profile error:", error);
@@ -388,10 +326,7 @@ class BackendApiService {
    */
   async updateProfile(userId: string, profile: any): Promise<any> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await api.put(`/profiles/${userId}`, profile, {
-        headers,
-      });
+      const response = await api.put(`/profiles/${userId}`, profile);
       return response.data;
     } catch (error) {
       console.error("Update profile error:", error);
