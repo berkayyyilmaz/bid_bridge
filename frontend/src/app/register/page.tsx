@@ -14,13 +14,12 @@ import AuthGuard from "@/components/auth/AuthGuard";
 // Form validation schema
 const registerSchema = z
   .object({
-    companyName: z.string().min(2, "Şirket adı en az 2 karakter olmalıdır"),
-    fullName: z.string().min(2, "Ad soyad en az 2 karakter olmalıdır"),
     email: z.string().email("Geçerli bir email adresi giriniz"),
     password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
     confirmPassword: z
       .string()
-      .min(6, "Şifre tekrarı en az 6 karakter olmalıdır"),
+      .min(6, "Şifre onayı en az 6 karakter olmalıdır"),
+    companyName: z.string().min(2, "Şirket adı en az 2 karakter olmalıdır"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Şifreler eşleşmiyor",
@@ -42,11 +41,10 @@ export default function RegisterPage() {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      companyName: "",
-      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
+      companyName: "",
     },
   });
 
@@ -60,7 +58,7 @@ export default function RegisterPage() {
       const result = await supabaseAuthService.register({
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
+        fullName: "", // Boş bırakılabilir veya kullanıcıdan alınabilir
         companyName: data.companyName,
       });
 
@@ -71,14 +69,12 @@ export default function RegisterPage() {
 
       if (result.user) {
         setSuccessMessage(
-          "Kayıt başarılı! Email adresinizi doğruladıktan sonra giriş yapabilirsiniz."
+          "Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz..."
         );
-        // 3 saniye sonra login sayfasına yönlendir
+        // 2 saniye bekle, sonra login sayfasına yönlendir
         setTimeout(() => {
           router.push("/login");
-        }, 3000);
-      } else {
-        setApiError("Kayıt başarısız oldu");
+        }, 2000);
       }
     } catch (error: any) {
       console.error("Register failed:", error);
@@ -125,68 +121,76 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Input
-                  label="Şirket Adı"
-                  {...register("companyName")}
-                  type="text"
-                  placeholder="Şirket adınızı giriniz"
-                  error={errors.companyName?.message}
-                />
-
-                <Input
-                  label="Ad Soyad"
-                  {...register("fullName")}
-                  type="text"
-                  placeholder="Adınızı ve soyadınızı giriniz"
-                  error={errors.fullName?.message}
-                />
-
-                <Input
-                  label="Email"
-                  {...register("email")}
-                  type="email"
-                  placeholder="ornek@email.com"
-                  error={errors.email?.message}
-                />
-
-                <Input
-                  label="Şifre"
-                  {...register("password")}
-                  type="password"
-                  placeholder="En az 6 karakter"
-                  error={errors.password?.message}
-                />
-
-                <Input
-                  label="Şifre Tekrarı"
-                  {...register("confirmPassword")}
-                  type="password"
-                  placeholder="Şifrenizi tekrar giriniz"
-                  error={errors.confirmPassword?.message}
-                />
-
-                <div className="pt-6 text-center">
-                  <Button
-                    customVariant="primary"
-                    customSize="md"
-                    type="submit"
-                    className="w-1/2"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Kayıt yapılıyor..." : "Kayıt Ol"}
-                  </Button>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Company Name Field */}
+                <div>
+                  <Input
+                    {...register("companyName")}
+                    type="text"
+                    label="Şirket Adı"
+                    placeholder="ABC Şirketi"
+                    color="green"
+                    error={errors.companyName?.message}
+                  />
                 </div>
 
-                <div className="pt-4 text-center">
+                {/* Email Field */}
+                <div>
+                  <Input
+                    {...register("email")}
+                    type="email"
+                    label="E-posta Adresiniz"
+                    placeholder="your@email.com"
+                    color="green"
+                    error={errors.email?.message}
+                  />
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <Input
+                    {...register("password")}
+                    type="password"
+                    label="Şifreniz"
+                    placeholder="••••••••"
+                    color="green"
+                    error={errors.password?.message}
+                  />
+                </div>
+
+                {/* Confirm Password Field */}
+                <div>
+                  <Input
+                    {...register("confirmPassword")}
+                    type="password"
+                    label="Şifre Onayı"
+                    placeholder="••••••••"
+                    color="green"
+                    error={errors.confirmPassword?.message}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  customVariant="primary"
+                  customSize="lg"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+                </Button>
+
+                {/* Login Link */}
+                <div className="text-center">
                   <p className="text-sm text-gray-600">
                     Zaten hesabınız var mı?{" "}
                     <button
                       type="button"
                       onClick={handleLoginClick}
-                      className="text-green-700 hover:underline font-medium"
+                      className="text-green-600 hover:text-green-500 font-medium transition-colors"
                     >
-                      Giriş Yap
+                      Giriş yapın
                     </button>
                   </p>
                 </div>

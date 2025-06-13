@@ -1,4 +1,4 @@
-import { supabase, type AuthUser, type Profile } from "@/lib/supabase";
+import { supabase, type AuthUser } from "@/lib/supabase";
 import { AuthError, User } from "@supabase/supabase-js";
 
 // Supabase Auth için interface'ler
@@ -16,7 +16,6 @@ interface RegisterData {
 
 interface AuthResponse {
   user: AuthUser | null;
-  profile: Profile | null;
   error: string | null;
 }
 
@@ -34,35 +33,27 @@ class SupabaseAuthService {
       if (error) {
         return {
           user: null,
-          profile: null,
           error: this.getErrorMessage(error),
         };
       }
 
       if (data.user) {
-        // Kullanıcının profil bilgilerini al
-        const profile = await this.getUserProfile(data.user.id);
-
-        // Session bilgilerini localStorage'a kaydet
-        this.saveSession(data.user, profile);
-
+        const user = this.mapSupabaseUser(data.user);
+        this.saveSession(user, null);
         return {
-          user: this.mapSupabaseUser(data.user),
-          profile,
+          user,
           error: null,
         };
       }
 
       return {
         user: null,
-        profile: null,
         error: "Giriş başarısız oldu",
       };
     } catch (error) {
       console.error("Login error:", error);
       return {
         user: null,
-        profile: null,
         error: "Beklenmeyen bir hata oluştu",
       };
     }
@@ -73,7 +64,6 @@ class SupabaseAuthService {
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      // 1. Supabase'de kullanıcı oluştur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -88,49 +78,27 @@ class SupabaseAuthService {
       if (authError) {
         return {
           user: null,
-          profile: null,
           error: this.getErrorMessage(authError),
         };
       }
 
       if (authData.user) {
-        // 2. Backend'de profil oluştur (Java API'ye istek)
-        const profile = await this.createProfileInBackend({
-          userId: authData.user.id,
-          fullName: data.fullName,
-          email: data.email,
-          companyName: data.companyName,
-        });
-
-        if (profile) {
-          this.saveSession(authData.user, profile);
-
-          return {
-            user: this.mapSupabaseUser(authData.user),
-            profile,
-            error: null,
-          };
-        } else {
-          // Profil oluşturulamazsa Supabase kullanıcısını sil
-          await supabase.auth.admin.deleteUser(authData.user.id);
-          return {
-            user: null,
-            profile: null,
-            error: "Profil oluşturulamadı",
-          };
-        }
+        const user = this.mapSupabaseUser(authData.user);
+        this.saveSession(user, null);
+        return {
+          user,
+          error: null,
+        };
       }
 
       return {
         user: null,
-        profile: null,
         error: "Kayıt başarısız oldu",
       };
     } catch (error) {
       console.error("Register error:", error);
       return {
         user: null,
-        profile: null,
         error: "Beklenmeyen bir hata oluştu",
       };
     }
@@ -145,7 +113,7 @@ class SupabaseAuthService {
       this.clearSession();
     } catch (error) {
       console.error("Logout error:", error);
-      this.clearSession(); // Hata olsa bile session'ı temizle
+      this.clearSession();
     }
   }
 
@@ -171,7 +139,14 @@ class SupabaseAuthService {
     try {
       const {
         data: { session },
+        error,
       } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Session hatası:", error);
+        return false;
+      }
+
       return !!session;
     } catch (error) {
       console.error("Check login status error:", error);
@@ -182,92 +157,17 @@ class SupabaseAuthService {
   /**
    * Auth durumu değişikliklerini dinle
    */
-  onAuthStateChange(
-    callback: (user: AuthUser | null, profile: Profile | null) => void
-  ) {
+  onAuthStateChange(callback: (user: AuthUser | null) => void) {
     return supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const user = this.mapSupabaseUser(session.user);
-        const profile = await this.getUserProfile(session.user.id);
-        this.saveSession(session.user, profile);
-        callback(user, profile);
+        this.saveSession(user, null);
+        callback(user);
       } else {
         this.clearSession();
-        callback(null, null);
+        callback(null);
       }
     });
-  }
-
-  /**
-   * Backend'den kullanıcı profili al
-   */
-  private async getUserProfile(userId: string): Promise<Profile | null> {
-    try {
-      // Java backend'den profil bilgilerini al
-      const response = await fetch(`/api/profiles/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${await this.getAccessToken()}`,
-        },
-      });
-
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
-    } catch (error) {
-      console.error("Get user profile error:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Backend'de profil oluştur
-   */
-  private async createProfileInBackend(data: {
-    userId: string;
-    fullName: string;
-    email: string;
-    companyName: string;
-  }): Promise<Profile | null> {
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${await this.getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          userId: data.userId,
-          fullName: data.fullName,
-          email: data.email,
-          companyName: data.companyName,
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return result.profile;
-      }
-      return null;
-    } catch (error) {
-      console.error("Create profile error:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Supabase access token al
-   */
-  private async getAccessToken(): Promise<string | null> {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      return session?.access_token || null;
-    } catch (error) {
-      console.error("Get access token error:", error);
-      return null;
-    }
   }
 
   /**
@@ -284,7 +184,7 @@ class SupabaseAuthService {
   /**
    * Session bilgilerini localStorage'a kaydet
    */
-  private saveSession(user: User, profile: Profile | null): void {
+  saveSession(user: User | AuthUser, profile: null): void {
     if (typeof window !== "undefined") {
       localStorage.setItem(
         "supabase_user",
@@ -294,10 +194,6 @@ class SupabaseAuthService {
           user_metadata: user.user_metadata,
         })
       );
-
-      if (profile) {
-        localStorage.setItem("user_profile", JSON.stringify(profile));
-      }
     }
   }
 
@@ -308,8 +204,8 @@ class SupabaseAuthService {
     if (typeof window !== "undefined") {
       localStorage.removeItem("supabase_user");
       localStorage.removeItem("user_profile");
-      localStorage.removeItem("auth_token"); // Eski token'ı da temizle
-      localStorage.removeItem("user_info"); // Eski user info'yu da temizle
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_info");
     }
   }
 
@@ -334,18 +230,16 @@ class SupabaseAuthService {
   /**
    * Kayıtlı kullanıcı bilgilerini al (localStorage'dan)
    */
-  getStoredUserInfo(): { user: AuthUser | null; profile: Profile | null } {
+  getStoredUserInfo(): { user: AuthUser | null; profile: null } {
     if (typeof window === "undefined") {
       return { user: null, profile: null };
     }
 
     try {
       const storedUser = localStorage.getItem("supabase_user");
-      const storedProfile = localStorage.getItem("user_profile");
-
       return {
         user: storedUser ? JSON.parse(storedUser) : null,
-        profile: storedProfile ? JSON.parse(storedProfile) : null,
+        profile: null,
       };
     } catch (error) {
       console.error("Get stored user info error:", error);

@@ -1,45 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import supabaseAuthService from "@/lib/services/supabaseAuthService";
 
 export default function HomePage() {
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        const isLoggedIn = await supabaseAuthService.isLoggedIn();
+        const user = await supabaseAuthService.getCurrentUser();
 
-        if (isLoggedIn) {
-          router.replace("/dashboard");
+        if (user) {
+          // Kullanıcı giriş yapmış, dashboard'a yönlendir
+          router.push("/dashboard");
         } else {
-          router.replace("/login");
+          // Kullanıcı giriş yapmamış, login sayfasına yönlendir
+          router.push("/login");
         }
       } catch (error) {
         console.error("Auth check error:", error);
-        router.replace("/login");
-      } finally {
-        setIsChecking(false);
+        // Hata durumunda login sayfasına yönlendir
+        router.push("/login");
       }
     };
 
     checkAuthAndRedirect();
   }, [router]);
 
-  if (isChecking) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
-      </div>
-    );
-  }
-
+  // Loading state gösterebiliriz
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p>Yönlendiriliyor...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Yönlendiriliyorsunuz...</p>
+      </div>
     </div>
   );
 }

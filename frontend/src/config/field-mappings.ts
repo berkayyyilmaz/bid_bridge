@@ -1,4 +1,6 @@
 // Field mappings - Veritabanı field'larını kullanıcı dostu başlıklara çevirir
+import { TableConfig, TableType } from "@/config/table-configs";
+
 export const FIELD_MAPPINGS = {
   // Genel fieldlar - tüm tablolarda kullanılabilir
   common: {
@@ -43,28 +45,28 @@ export function getFieldTitle(tableName: string, fieldName: string): string {
 }
 
 // Helper function - Tablo konfigürasyonu oluşturur
-export function createTableConfig<T>(
+export function createTableConfig<T extends Record<string, any>>(
   tableName: keyof typeof FIELD_MAPPINGS,
   columns: (keyof T)[],
-  customConfig?: Partial<import("@/types/table").TableConfig<T>>
-): import("@/types/table").TableConfig<T> {
+  customConfig?: Partial<TableConfig>
+): TableConfig {
   const defaultColumns = columns.map((key) => ({
-    key,
-    title: getFieldTitle(tableName as string, key as string),
+    key: String(key),
+    title: getFieldTitle(tableName as string, String(key)),
     sortable: true,
     filterable: true,
     type: "text" as const,
   }));
 
   return {
+    type: tableName as TableType,
     columns: defaultColumns,
+    title: getFieldTitle(tableName as string, "title"),
     searchable: true,
     exportable: true,
     pageSize: 10,
     selectable: true,
     rowSelection: "multiple",
-    columnReordering: true,
-    columnResizing: true,
     ...customConfig,
   };
 }

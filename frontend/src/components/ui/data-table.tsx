@@ -1,6 +1,7 @@
 "use client";
 
-import * as React from "react";
+// import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -49,28 +50,45 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTableProps, ColumnConfig } from "@/types/table";
+import { DataTableProps } from "@/types/table";
+import {
+  TableType,
+  TableConfig,
+  TableColumnConfig,
+  createTableConfig,
+} from "@/config/table-configs";
 
 export function DataTable<T extends Record<string, any>>({
   data,
   config,
   loading = false,
-  onSelectionChange,
   onRowClick,
+  onSelectionChange,
   onRowEdit,
   onRowDelete,
-}: DataTableProps<T>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  error,
+}: {
+  data: T[];
+  config: TableConfig;
+  loading?: boolean;
+  onRowClick?: (row: T) => void;
+  onSelectionChange?: (selectedRows: T[]) => void;
+  onRowEdit?: (row: T) => void;
+  onRowDelete?: (row: T) => void;
+  error?: string | null;
+}) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [globalFilter, setGlobalFilter] = useState("");
+
+  if (!config?.columns) {
+    return <div className="text-red-500">Tablo konfigürasyonu bulunamadı.</div>;
+  }
 
   // Dinamik kolon oluşturma
-  const columns = React.useMemo<ColumnDef<T>[]>(() => {
+  const columns = useMemo<ColumnDef<T>[]>(() => {
     const cols: ColumnDef<T>[] = [];
 
     // Seçim kolonu - sadece multiple selection için checkbox
@@ -104,7 +122,7 @@ export function DataTable<T extends Record<string, any>>({
     }
 
     // Veri kolonları
-    config.columns.forEach((colConfig: ColumnConfig<T>) => {
+    config.columns.forEach((colConfig: TableColumnConfig) => {
       cols.push({
         accessorKey: colConfig.key as string,
         id: colConfig.key as string,
@@ -253,7 +271,7 @@ export function DataTable<T extends Record<string, any>>({
   });
 
   // Seçim değişikliğini parent'a bildir
-  React.useEffect(() => {
+  useEffect(() => {
     if (onSelectionChange) {
       const selectedRows = table
         .getFilteredSelectedRowModel()
@@ -476,7 +494,7 @@ export function DataTable<T extends Record<string, any>>({
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
+              {[5, 10, 20, 30, 40, 50].map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -543,4 +561,36 @@ export function DataTable<T extends Record<string, any>>({
         )}
     </div>
   );
+}
+
+function getColumnsForTableType(tableType: string) {
+  switch (tableType) {
+    case "companies":
+      return [
+        { key: "name", label: "Şirket Adı" },
+        { key: "created_at", label: "Oluşturulma Tarihi" },
+      ];
+    case "jobs":
+      return [
+        { key: "title", label: "İş Başlığı" },
+        { key: "incoterm_name", label: "Incoterm" },
+        { key: "shipping_method_name", label: "Nakliye Yöntemi" },
+        { key: "loading_place_name", label: "Yükleme Yeri" },
+        { key: "port_name", label: "Liman" },
+        { key: "loading_date", label: "Yükleme Tarihi" },
+        { key: "created_at", label: "Oluşturulma Tarihi" },
+      ];
+    case "quotes":
+      return [
+        { key: "job_id", label: "İş ID" },
+        { key: "price", label: "Fiyat" },
+        { key: "currency", label: "Para Birimi" },
+        { key: "transit_time", label: "Transit Süresi" },
+        { key: "valid_until", label: "Geçerlilik Tarihi" },
+        { key: "status", label: "Durum" },
+        { key: "created_at", label: "Oluşturulma Tarihi" },
+      ];
+    default:
+      return [];
+  }
 }

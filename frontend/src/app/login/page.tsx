@@ -101,57 +101,66 @@ export default function LoginPage() {
               )}
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <Input
-                  label="Email"
-                  {...register("email")}
-                  type="email"
-                  placeholder="ornek@email.com"
-                  error={errors.email?.message}
-                />
+                {/* Email Field */}
+                <div>
+                  <Input
+                    {...register("email")}
+                    type="email"
+                    label="E-posta Adresiniz"
+                    placeholder="your@email.com"
+                    color="green"
+                    error={errors.email?.message}
+                  />
+                </div>
 
-                <Input
-                  label="Şifre"
-                  {...register("password")}
-                  type="password"
-                  placeholder="********"
-                  error={errors.password?.message}
-                />
+                {/* Password Field */}
+                <div>
+                  <Input
+                    {...register("password")}
+                    type="password"
+                    label="Şifreniz"
+                    placeholder="••••••••"
+                    color="green"
+                    error={errors.password?.message}
+                  />
+                </div>
 
-                <div className="flex items-center justify-between pt-2">
+                {/* Remember Me Checkbox */}
+                <div className="flex items-center justify-between">
                   <Checkbox
+                    {...register("rememberMe")}
                     label="Beni hatırla"
                     color="green"
-                    {...register("rememberMe")}
                   />
                   <a
                     href="#"
-                    className="text-sm text-green-700 hover:underline"
+                    className="text-sm text-green-600 hover:text-green-500 transition-colors"
                   >
-                    Şifremi Unuttum?
+                    Şifremi unuttum
                   </a>
                 </div>
 
-                <div className="pt-6 text-center">
-                  <Button
-                    customVariant="primary"
-                    customSize="md"
-                    type="submit"
-                    className="w-1/3"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
-                  </Button>
-                </div>
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  customVariant="primary"
+                  customSize="lg"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
+                </Button>
 
-                <div className="pt-4 text-center">
+                {/* Register Link */}
+                <div className="text-center">
                   <p className="text-sm text-gray-600">
                     Hesabınız yok mu?{" "}
                     <button
                       type="button"
                       onClick={handleRegisterClick}
-                      className="text-green-700 hover:underline font-medium"
+                      className="text-green-600 hover:text-green-500 font-medium transition-colors"
                     >
-                      Kayıt Ol
+                      Kayıt olun
                     </button>
                   </p>
                 </div>

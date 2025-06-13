@@ -11,8 +11,36 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    storageKey: "supabase.auth.token",
+    flowType: "pkce",
+  },
+  global: {
+    headers: {
+      "x-application-name": "bid-bridge",
+    },
   },
 });
+
+// Test fonksiyonu
+export const testSupabaseConnection = async () => {
+  try {
+    console.log("Supabase URL:", supabaseUrl);
+    console.log("Supabase Anon Key:", supabaseAnonKey);
+
+    const { data, error } = await supabase.auth.getSession();
+    console.log("Test connection result:", {
+      hasSession: !!data.session,
+      sessionData: data.session,
+      error: error,
+    });
+
+    return { success: !error, error };
+  } catch (error) {
+    console.error("Test connection error:", error);
+    return { success: false, error };
+  }
+};
 
 // Auth durumu için tip tanımları
 export interface AuthUser {

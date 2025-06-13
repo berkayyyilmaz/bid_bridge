@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   Briefcase,
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import supabaseAuthService from "@/lib/services/supabaseAuthService";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -28,7 +29,8 @@ const navItems = [
 
 export default function Sidebar() {
   const router = useRouter();
-
+  const pathname = usePathname();
+  console.log("Sidebar çalıştı");
   const handleLogout = async () => {
     try {
       // Supabase auth ile çıkış yap
@@ -51,22 +53,30 @@ export default function Sidebar() {
           alt="Logo"
           width={120}
           height={40}
-          objectFit="contain"
+          className="object-contain"
         />
       </div>
       <nav className="flex-grow">
         <ul className="space-y-2">
-          {navItems.map((item) => (
-            <li key={item.label}>
-              <Link
-                href={item.href}
-                className="flex items-center space-x-3 p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-150"
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <li key={item.label}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center space-x-3 p-2 rounded-md transition-colors duration-150",
+                    isActive
+                      ? "bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
       <div className="mt-auto">

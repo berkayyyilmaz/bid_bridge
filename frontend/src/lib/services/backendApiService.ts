@@ -1,5 +1,7 @@
-import api from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { CompanyApiResponse } from "@/types/company";
+import { JobApiResponse } from "@/types/job";
+import { QuoteApiResponse } from "@/types/quote";
 
 // Backend API için interface'ler
 interface Company {
@@ -48,32 +50,50 @@ interface Notification {
 }
 
 class BackendApiService {
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+  private async fetchApi<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const headers = {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    };
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      headers,
+    });
+    if (!response.ok) {
+      if (response.status === 401) {
+        await supabase.auth.signOut();
+        window.location.href = "/login";
+      }
+      throw new Error(`API error: ${response.statusText}`);
+    }
+    if (response.status === 204) return undefined as T; // No Content
+    return response.json();
+  }
+
   // ============ COMPANY API'LERİ ============
 
   /**
    * Tüm şirketleri getir
    */
-  async getCompanies(): Promise<Company[]> {
-    try {
-      const response = await api.get<Company[]>("/companies");
-      return response.data;
-    } catch (error) {
-      console.error("Get companies error:", error);
-      throw error;
-    }
+  async getCompanies(): Promise<CompanyApiResponse[]> {
+    return this.fetchApi<CompanyApiResponse[]>("/api/companies");
   }
 
   /**
    * Şirket detayını getir
    */
   async getCompany(id: string): Promise<Company> {
-    try {
-      const response = await api.get<Company>(`/companies/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Get company error:", error);
-      throw error;
-    }
+    return this.fetchApi<Company>(`/api/companies/${id}`);
   }
 
   /**
@@ -82,38 +102,27 @@ class BackendApiService {
   async createCompany(
     company: Omit<Company, "id" | "createdAt" | "updatedAt">
   ): Promise<Company> {
-    try {
-      const response = await api.post<Company>("/companies", company);
-      return response.data;
-    } catch (error) {
-      console.error("Create company error:", error);
-      throw error;
-    }
+    return this.fetchApi<Company>(`/api/companies`, {
+      method: "POST",
+      body: JSON.stringify(company),
+    });
   }
 
   /**
    * Şirket güncelle
    */
   async updateCompany(id: string, company: Partial<Company>): Promise<Company> {
-    try {
-      const response = await api.put<Company>(`/companies/${id}`, company);
-      return response.data;
-    } catch (error) {
-      console.error("Update company error:", error);
-      throw error;
-    }
+    return this.fetchApi<Company>(`/api/companies/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(company),
+    });
   }
 
   /**
    * Şirket sil
    */
   async deleteCompany(id: string): Promise<void> {
-    try {
-      await api.delete(`/companies/${id}`);
-    } catch (error) {
-      console.error("Delete company error:", error);
-      throw error;
-    }
+    await this.fetchApi<void>(`/api/companies/${id}`, { method: "DELETE" });
   }
 
   // ============ JOB API'LERİ ============
@@ -121,40 +130,22 @@ class BackendApiService {
   /**
    * Tüm işleri getir
    */
-  async getJobs(): Promise<Job[]> {
-    try {
-      const response = await api.get<Job[]>("/jobs");
-      return response.data;
-    } catch (error) {
-      console.error("Get jobs error:", error);
-      throw error;
-    }
+  async getJobs(): Promise<JobApiResponse[]> {
+    return this.fetchApi<JobApiResponse[]>("/api/jobs");
   }
 
   /**
    * Şirkete ait işleri getir
    */
   async getJobsByCompany(companyId: string): Promise<Job[]> {
-    try {
-      const response = await api.get<Job[]>(`/jobs/company/${companyId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Get jobs by company error:", error);
-      throw error;
-    }
+    return this.fetchApi<Job[]>(`/api/jobs/company/${companyId}`);
   }
 
   /**
    * İş detayını getir
    */
   async getJob(id: string): Promise<Job> {
-    try {
-      const response = await api.get<Job>(`/jobs/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Get job error:", error);
-      throw error;
-    }
+    return this.fetchApi<Job>(`/api/jobs/${id}`);
   }
 
   /**
@@ -163,38 +154,27 @@ class BackendApiService {
   async createJob(
     job: Omit<Job, "id" | "createdAt" | "updatedAt">
   ): Promise<Job> {
-    try {
-      const response = await api.post<Job>("/jobs", job);
-      return response.data;
-    } catch (error) {
-      console.error("Create job error:", error);
-      throw error;
-    }
+    return this.fetchApi<Job>(`/api/jobs`, {
+      method: "POST",
+      body: JSON.stringify(job),
+    });
   }
 
   /**
    * İş güncelle
    */
   async updateJob(id: string, job: Partial<Job>): Promise<Job> {
-    try {
-      const response = await api.put<Job>(`/jobs/${id}`, job);
-      return response.data;
-    } catch (error) {
-      console.error("Update job error:", error);
-      throw error;
-    }
+    return this.fetchApi<Job>(`/api/jobs/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(job),
+    });
   }
 
   /**
    * İş sil
    */
   async deleteJob(id: string): Promise<void> {
-    try {
-      await api.delete(`/jobs/${id}`);
-    } catch (error) {
-      console.error("Delete job error:", error);
-      throw error;
-    }
+    await this.fetchApi<void>(`/api/jobs/${id}`, { method: "DELETE" });
   }
 
   // ============ QUOTE API'LERİ ============
@@ -203,26 +183,14 @@ class BackendApiService {
    * İşe ait teklifleri getir
    */
   async getQuotesByJob(jobId: string): Promise<Quote[]> {
-    try {
-      const response = await api.get<Quote[]>(`/quotes/job/${jobId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Get quotes by job error:", error);
-      throw error;
-    }
+    return this.fetchApi<Quote[]>(`/api/quotes/job/${jobId}`);
   }
 
   /**
    * Şirkete ait teklifleri getir
    */
   async getQuotesByCompany(companyId: string): Promise<Quote[]> {
-    try {
-      const response = await api.get<Quote[]>(`/quotes/company/${companyId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Get quotes by company error:", error);
-      throw error;
-    }
+    return this.fetchApi<Quote[]>(`/api/quotes/company/${companyId}`);
   }
 
   /**
@@ -231,38 +199,27 @@ class BackendApiService {
   async createQuote(
     quote: Omit<Quote, "id" | "createdAt" | "updatedAt">
   ): Promise<Quote> {
-    try {
-      const response = await api.post<Quote>("/quotes", quote);
-      return response.data;
-    } catch (error) {
-      console.error("Create quote error:", error);
-      throw error;
-    }
+    return this.fetchApi<Quote>(`/api/quotes`, {
+      method: "POST",
+      body: JSON.stringify(quote),
+    });
   }
 
   /**
    * Teklif güncelle
    */
   async updateQuote(id: string, quote: Partial<Quote>): Promise<Quote> {
-    try {
-      const response = await api.put<Quote>(`/quotes/${id}`, quote);
-      return response.data;
-    } catch (error) {
-      console.error("Update quote error:", error);
-      throw error;
-    }
+    return this.fetchApi<Quote>(`/api/quotes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(quote),
+    });
   }
 
   /**
    * Teklif sil
    */
   async deleteQuote(id: string): Promise<void> {
-    try {
-      await api.delete(`/quotes/${id}`);
-    } catch (error) {
-      console.error("Delete quote error:", error);
-      throw error;
-    }
+    await this.fetchApi<void>(`/api/quotes/${id}`, { method: "DELETE" });
   }
 
   // ============ NOTIFICATION API'LERİ ============
@@ -271,39 +228,28 @@ class BackendApiService {
    * Kullanıcıya ait bildirimleri getir
    */
   async getNotifications(profileId: string): Promise<Notification[]> {
-    try {
-      const response = await api.get<Notification[]>(
-        `/notifications/profile/${profileId}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Get notifications error:", error);
-      throw error;
-    }
+    return this.fetchApi<Notification[]>(
+      `/api/notifications/profile/${profileId}`
+    );
   }
 
   /**
    * Bildirimi okundu olarak işaretle
    */
   async markNotificationAsRead(id: string): Promise<void> {
-    try {
-      await api.put(`/notifications/${id}/read`);
-    } catch (error) {
-      console.error("Mark notification as read error:", error);
-      throw error;
-    }
+    await this.fetchApi<void>(`/api/notifications/${id}/read`, {
+      method: "POST",
+    });
   }
 
   /**
    * Tüm bildirimleri okundu olarak işaretle
    */
   async markAllNotificationsAsRead(profileId: string): Promise<void> {
-    try {
-      await api.put(`/notifications/profile/${profileId}/read-all`);
-    } catch (error) {
-      console.error("Mark all notifications as read error:", error);
-      throw error;
-    }
+    await this.fetchApi<void>(
+      `/api/notifications/profile/${profileId}/read-all`,
+      { method: "POST" }
+    );
   }
 
   // ============ PROFILE API'LERİ ============
@@ -312,26 +258,23 @@ class BackendApiService {
    * Profil bilgilerini getir
    */
   async getProfile(userId: string): Promise<any> {
-    try {
-      const response = await api.get(`/profiles/${userId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Get profile error:", error);
-      throw error;
-    }
+    return this.fetchApi<any>(`/api/profiles/${userId}`);
   }
 
   /**
    * Profil güncelle
    */
   async updateProfile(userId: string, profile: any): Promise<any> {
-    try {
-      const response = await api.put(`/profiles/${userId}`, profile);
-      return response.data;
-    } catch (error) {
-      console.error("Update profile error:", error);
-      throw error;
-    }
+    return this.fetchApi<any>(`/api/profiles/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify(profile),
+    });
+  }
+
+  // ============ NEW API'LER ============
+
+  async getQuotes(): Promise<QuoteApiResponse[]> {
+    return this.fetchApi<QuoteApiResponse[]>("/api/quotes");
   }
 }
 

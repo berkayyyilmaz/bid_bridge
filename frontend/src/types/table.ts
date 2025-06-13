@@ -1,55 +1,53 @@
 import { ReactNode } from "react";
+import type {
+  TableType,
+  TableConfig,
+  TableColumnConfig,
+} from "@/config/table-configs";
 
-export interface ColumnConfig<T = any> {
-  key: keyof T;
-  title: string;
-  sortable?: boolean;
-  filterable?: boolean;
-  width?: number;
-  render?: (value: any, row: T) => ReactNode;
-  type?: "text" | "number" | "date" | "boolean" | "select";
-  filterOptions?: { label: string; value: string }[];
-  resizable?: boolean;
-  pinnable?: boolean;
-}
-
-export interface TableConfig<T = any> {
-  columns: ColumnConfig<T>[];
-  title?: string;
-  searchable?: boolean;
-  exportable?: boolean;
-  pageSize?: number;
-  selectable?: boolean;
-  columnReordering?: boolean;
-  columnResizing?: boolean;
-  rowSelection?: "single" | "multiple" | false;
-}
-
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T extends Record<string, any>> {
   data: T[];
-  config: TableConfig<T>;
+  config: TableConfig;
   loading?: boolean;
-  onSelectionChange?: (selectedRows: T[]) => void;
   onRowClick?: (row: T) => void;
+  onSelectionChange?: (selectedRows: T[]) => void;
   onRowEdit?: (row: T) => void;
   onRowDelete?: (row: T) => void;
+  error?: string | null;
 }
 
 export interface FormField {
   key: string;
   label: string;
-  type: "text" | "email" | "number" | "textarea" | "select" | "date";
-  options?: { label: string; value: string }[];
+  type: "text" | "number" | "date" | "boolean" | "select" | "textarea";
   required?: boolean;
-  disabled?: boolean;
+  options?: Array<{ label: string; value: string }>;
 }
 
-export interface EditModalProps<T = any> {
+export interface EditModalProps<T extends Record<string, any>> {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: T) => void;
-  data: T | null;
+  data?: T;
   fields: FormField[];
   title?: string;
+  loading?: boolean;
+}
+
+export type { TableConfig, TableColumnConfig };
+
+export interface Column {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  searchable?: boolean;
+  render?: (value: any) => React.ReactNode;
+}
+
+export interface TableProps<T> {
+  data: T[];
+  tableType: TableType;
+  customConfig?: Partial<TableConfig>;
   loading?: boolean;
 }
