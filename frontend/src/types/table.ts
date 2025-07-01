@@ -19,8 +19,16 @@ export interface DataTableProps<T extends Record<string, any>> {
 export interface FormField {
   key: string;
   label: string;
-  type: "text" | "number" | "date" | "boolean" | "select" | "textarea";
+  type:
+    | "text"
+    | "email"
+    | "number"
+    | "date"
+    | "boolean"
+    | "select"
+    | "textarea";
   required?: boolean;
+  disabled?: boolean;
   options?: Array<{ label: string; value: string }>;
 }
 

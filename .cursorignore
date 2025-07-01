@@ -1,7 +1,6 @@
 # Ortak
 .git/
 .DS_Store
-.env*
 *.pem
 *.key
 *.crt
@@ -10,7 +9,7 @@
 .next/
 out/
 coverage/
-*.log
+
 
 # Java / Backend
 backend/build/

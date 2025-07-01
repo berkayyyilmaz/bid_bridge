@@ -4,7 +4,12 @@ export type TableType =
   | "companies"
   | "orders"
   | "incoterm"
-  | "job";
+  | "job"
+  | "shippingMethod"
+  | "port"
+  | "loadingPlace"
+  | "loadingStyle"
+  | "quote";
 
 // Tablo başlıkları için mapping
 export const TABLE_TITLES: Record<TableType, string> = {
@@ -13,6 +18,11 @@ export const TABLE_TITLES: Record<TableType, string> = {
   orders: "Sipariş Listesi",
   incoterm: "Incoterm Listesi",
   job: "İş Listesi",
+  shippingMethod: "Nakliye Yöntemleri",
+  port: "Limanlar",
+  loadingPlace: "Yükleme Yerleri",
+  loadingStyle: "Yükleme Stilleri",
+  quote: "Teklifler",
 };
 
 // Tablo kolonları için tip tanımlamaları
@@ -83,15 +93,14 @@ export const TABLE_COLUMNS: Record<TableType, TableColumnConfig[]> = {
       filterable: true,
     },
     {
-      key: "contact_email",
-      title: "İletişim E-postası",
-      type: "text",
+      key: "createdAt",
+      title: "Oluşturulma Tarihi",
+      type: "date",
       sortable: true,
-      filterable: true,
     },
     {
-      key: "created_at",
-      title: "Oluşturulma Tarihi",
+      key: "updatedAt",
+      title: "Güncellenme Tarihi",
       type: "date",
       sortable: true,
     },
@@ -134,13 +143,14 @@ export const TABLE_COLUMNS: Record<TableType, TableColumnConfig[]> = {
       filterable: true,
     },
     {
-      key: "description",
-      title: "Açıklama",
+      key: "companyName",
+      title: "Şirket",
       type: "text",
       sortable: true,
+      filterable: true,
     },
     {
-      key: "created_at",
+      key: "createdAt",
       title: "Oluşturulma Tarihi",
       type: "date",
       sortable: true,
@@ -163,6 +173,150 @@ export const TABLE_COLUMNS: Record<TableType, TableColumnConfig[]> = {
     },
     {
       key: "created_at",
+      title: "Oluşturulma Tarihi",
+      type: "date",
+      sortable: true,
+    },
+  ],
+  shippingMethod: [
+    {
+      key: "name",
+      title: "Nakliye Yöntemi Adı",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "companyName",
+      title: "Şirket",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "createdAt",
+      title: "Oluşturulma Tarihi",
+      type: "date",
+      sortable: true,
+    },
+  ],
+  port: [
+    {
+      key: "name",
+      title: "Liman Adı",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "companyName",
+      title: "Şirket",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "createdAt",
+      title: "Oluşturulma Tarihi",
+      type: "date",
+      sortable: true,
+    },
+  ],
+  loadingPlace: [
+    {
+      key: "name",
+      title: "Yükleme Yeri Adı",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "companyName",
+      title: "Şirket",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "createdAt",
+      title: "Oluşturulma Tarihi",
+      type: "date",
+      sortable: true,
+    },
+  ],
+  loadingStyle: [
+    {
+      key: "name",
+      title: "Yükleme Stili Adı",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "companyName",
+      title: "Şirket",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "createdAt",
+      title: "Oluşturulma Tarihi",
+      type: "date",
+      sortable: true,
+    },
+  ],
+  quote: [
+    {
+      key: "jobTitle",
+      title: "İş",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "offeringCompanyName",
+      title: "Teklif Veren Şirket",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "price",
+      title: "Fiyat",
+      type: "number",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "currency",
+      title: "Para Birimi",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "transitTime",
+      title: "Transit Süresi (Gün)",
+      type: "number",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "validUntil",
+      title: "Geçerlilik Tarihi",
+      type: "date",
+      sortable: true,
+    },
+    {
+      key: "status",
+      title: "Durum",
+      type: "text",
+      sortable: true,
+      filterable: true,
+    },
+    {
+      key: "createdAt",
       title: "Oluşturulma Tarihi",
       type: "date",
       sortable: true,

@@ -6,11 +6,11 @@ import { Plus } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { CrudEditModal } from "@/components/forms/CrudEditModal";
 import { createCrudHook } from "@/hooks/useCrudOperations";
-import { quoteCrudOperations } from "@/services/LookupService";
+import { loadingPlaceCrudOperations } from "@/services/LookupService";
 import { getLookupFormConfig } from "@/config/lookup-form-configs";
 import { createTableConfig } from "@/config/table-configs";
-import { Quote } from "@/types/lookup";
-import { QuoteFormData } from "@/config/lookup-form-configs";
+import { LoadingPlace } from "@/types/lookup";
+import { LoadingPlaceFormData } from "@/config/lookup-form-configs";
 import {
   Card,
   CardHeader,
@@ -19,45 +19,45 @@ import {
   CardContent,
 } from "@/components/ui/card";
 
-// Quote CRUD Hook
-const useQuoteCrud = createCrudHook<
-  Quote,
-  QuoteFormData,
-  Partial<QuoteFormData>
->(quoteCrudOperations);
+// Loading Place CRUD Hook
+const useLoadingPlaceCrud = createCrudHook<
+  LoadingPlace,
+  LoadingPlaceFormData,
+  Partial<LoadingPlaceFormData>
+>(loadingPlaceCrudOperations);
 
-export default function QuotesPage() {
+export default function LoadingPlacesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<Quote | null>(null);
+  const [editingItem, setEditingItem] = useState<LoadingPlace | null>(null);
 
   const {
-    data: quotes,
+    data: loadingPlaces,
     loading,
     error,
     createItem,
     updateItem,
     deleteItem,
     refetch,
-  } = useQuoteCrud();
+  } = useLoadingPlaceCrud();
 
   const handleCreate = () => {
     setEditingItem(null);
     setIsModalOpen(true);
   };
 
-  const handleEdit = (quote: Quote) => {
-    setEditingItem(quote);
+  const handleEdit = (loadingPlace: LoadingPlace) => {
+    setEditingItem(loadingPlace);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (quote: Quote) => {
-    if (confirm("Bu teklifi silmek istediğinizden emin misiniz?")) {
-      await deleteItem(quote.id);
+  const handleDelete = async (loadingPlace: LoadingPlace) => {
+    if (confirm("Bu yükleme yerini silmek istediğinizden emin misiniz?")) {
+      await deleteItem(loadingPlace.id);
       refetch();
     }
   };
 
-  const handleSubmit = async (data: QuoteFormData) => {
+  const handleSubmit = async (data: LoadingPlaceFormData) => {
     try {
       if (editingItem) {
         await updateItem(editingItem.id, data);
@@ -67,11 +67,11 @@ export default function QuotesPage() {
       setIsModalOpen(false);
       refetch();
     } catch (error) {
-      console.error("Teklif kaydetme hatası:", error);
+      console.error("Yükleme yeri kaydetme hatası:", error);
     }
   };
 
-  const formConfig = getLookupFormConfig<QuoteFormData>("quote");
+  const formConfig = getLookupFormConfig<LoadingPlaceFormData>("loadingPlace");
 
   if (loading) return <div>Yükleniyor...</div>;
   if (error) return <div>Hata: {error}</div>;
@@ -83,13 +83,15 @@ export default function QuotesPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-3xl font-bold tracking-tight">
-                Teklifler
+                Yükleme Yerleri
               </CardTitle>
-              <CardDescription>İş tekliflerini yönetin</CardDescription>
+              <CardDescription>
+                Yükleme yeri tanımlarını yönetin
+              </CardDescription>
             </div>
             <Button onClick={handleCreate}>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Teklif
+              Yeni Yükleme Yeri
             </Button>
           </div>
         </CardHeader>
@@ -98,8 +100,8 @@ export default function QuotesPage() {
       <Card>
         <CardContent className="p-6">
           <DataTable
-            data={quotes}
-            config={createTableConfig("quote")}
+            data={loadingPlaces}
+            config={createTableConfig("loadingPlace")}
             onRowEdit={handleEdit}
             onRowDelete={handleDelete}
           />
@@ -110,20 +112,7 @@ export default function QuotesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         config={formConfig}
-        initialData={
-          editingItem
-            ? {
-                jobId: editingItem.jobId,
-                price: editingItem.price,
-                currency: editingItem.currency,
-                transitTime: editingItem.transitTime,
-                validUntil: editingItem.validUntil,
-                note: editingItem.note,
-                address: editingItem.address,
-                status: editingItem.status,
-              }
-            : undefined
-        }
+        initialData={editingItem ? { name: editingItem.name } : undefined}
         onSubmit={handleSubmit}
         mode={editingItem ? "edit" : "create"}
       />

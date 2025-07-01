@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { CompanyApiResponse } from "@/types/company";
 import { JobApiResponse } from "@/types/job";
 import { QuoteApiResponse } from "@/types/quote";
+import { useState, useCallback, useEffect } from "react";
 
 // Backend API için interface'ler
 interface Company {
@@ -50,7 +51,8 @@ interface Notification {
 }
 
 class BackendApiService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  private baseUrl =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
   private async fetchApi<T>(
     endpoint: string,
@@ -60,24 +62,68 @@ class BackendApiService {
       data: { session },
     } = await supabase.auth.getSession();
     const token = session?.access_token;
+
     const headers = {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     };
+
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers,
     });
+
     if (!response.ok) {
       if (response.status === 401) {
         await supabase.auth.signOut();
         window.location.href = "/login";
       }
-      throw new Error(`API error: ${response.statusText}`);
+
+      // Response body'den error mesajını almaya çalış
+      let errorMessage = `API error: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (e) {
+        // JSON parse edemez ise varsayılan mesajı kullan
+        console.error("Error parsing error response:", e);
+      }
+
+      console.error(
+        `API Error - Status: ${response.status}, Message: ${errorMessage}, URL: ${this.baseUrl}${endpoint}`
+      );
+      throw new Error(errorMessage);
     }
     if (response.status === 204) return undefined as T; // No Content
     return response.json();
+  }
+
+  // Generic CRUD operations
+  async get<T>(endpoint: string): Promise<T> {
+    return this.fetchApi<T>(endpoint);
+  }
+
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.fetchApi<T>(endpoint, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.fetchApi<T>(endpoint, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async delete<T = void>(endpoint: string): Promise<T> {
+    return this.fetchApi<T>(endpoint, { method: "DELETE" });
   }
 
   // ============ COMPANY API'LERİ ============
@@ -86,14 +132,14 @@ class BackendApiService {
    * Tüm şirketleri getir
    */
   async getCompanies(): Promise<CompanyApiResponse[]> {
-    return this.fetchApi<CompanyApiResponse[]>("/api/companies");
+    return this.fetchApi<CompanyApiResponse[]>("/companies");
   }
 
   /**
    * Şirket detayını getir
    */
   async getCompany(id: string): Promise<Company> {
-    return this.fetchApi<Company>(`/api/companies/${id}`);
+    return this.fetchApi<Company>(`/companies/${id}`);
   }
 
   /**
@@ -102,7 +148,7 @@ class BackendApiService {
   async createCompany(
     company: Omit<Company, "id" | "createdAt" | "updatedAt">
   ): Promise<Company> {
-    return this.fetchApi<Company>(`/api/companies`, {
+    return this.fetchApi<Company>(`/companies`, {
       method: "POST",
       body: JSON.stringify(company),
     });
@@ -112,7 +158,7 @@ class BackendApiService {
    * Şirket güncelle
    */
   async updateCompany(id: string, company: Partial<Company>): Promise<Company> {
-    return this.fetchApi<Company>(`/api/companies/${id}`, {
+    return this.fetchApi<Company>(`/companies/${id}`, {
       method: "PUT",
       body: JSON.stringify(company),
     });
@@ -122,7 +168,7 @@ class BackendApiService {
    * Şirket sil
    */
   async deleteCompany(id: string): Promise<void> {
-    await this.fetchApi<void>(`/api/companies/${id}`, { method: "DELETE" });
+    await this.fetchApi<void>(`/companies/${id}`, { method: "DELETE" });
   }
 
   // ============ JOB API'LERİ ============
@@ -131,21 +177,21 @@ class BackendApiService {
    * Tüm işleri getir
    */
   async getJobs(): Promise<JobApiResponse[]> {
-    return this.fetchApi<JobApiResponse[]>("/api/jobs");
+    return this.fetchApi<JobApiResponse[]>("/jobs");
   }
 
   /**
    * Şirkete ait işleri getir
    */
   async getJobsByCompany(companyId: string): Promise<Job[]> {
-    return this.fetchApi<Job[]>(`/api/jobs/company/${companyId}`);
+    return this.fetchApi<Job[]>(`/jobs/company/${companyId}`);
   }
 
   /**
    * İş detayını getir
    */
   async getJob(id: string): Promise<Job> {
-    return this.fetchApi<Job>(`/api/jobs/${id}`);
+    return this.fetchApi<Job>(`/jobs/${id}`);
   }
 
   /**
@@ -154,7 +200,7 @@ class BackendApiService {
   async createJob(
     job: Omit<Job, "id" | "createdAt" | "updatedAt">
   ): Promise<Job> {
-    return this.fetchApi<Job>(`/api/jobs`, {
+    return this.fetchApi<Job>(`/jobs`, {
       method: "POST",
       body: JSON.stringify(job),
     });
@@ -164,7 +210,7 @@ class BackendApiService {
    * İş güncelle
    */
   async updateJob(id: string, job: Partial<Job>): Promise<Job> {
-    return this.fetchApi<Job>(`/api/jobs/${id}`, {
+    return this.fetchApi<Job>(`/jobs/${id}`, {
       method: "PUT",
       body: JSON.stringify(job),
     });
@@ -174,7 +220,7 @@ class BackendApiService {
    * İş sil
    */
   async deleteJob(id: string): Promise<void> {
-    await this.fetchApi<void>(`/api/jobs/${id}`, { method: "DELETE" });
+    await this.fetchApi<void>(`/jobs/${id}`, { method: "DELETE" });
   }
 
   // ============ QUOTE API'LERİ ============
@@ -183,14 +229,14 @@ class BackendApiService {
    * İşe ait teklifleri getir
    */
   async getQuotesByJob(jobId: string): Promise<Quote[]> {
-    return this.fetchApi<Quote[]>(`/api/quotes/job/${jobId}`);
+    return this.fetchApi<Quote[]>(`/quotes/job/${jobId}`);
   }
 
   /**
    * Şirkete ait teklifleri getir
    */
   async getQuotesByCompany(companyId: string): Promise<Quote[]> {
-    return this.fetchApi<Quote[]>(`/api/quotes/company/${companyId}`);
+    return this.fetchApi<Quote[]>(`/quotes/company/${companyId}`);
   }
 
   /**
@@ -199,7 +245,7 @@ class BackendApiService {
   async createQuote(
     quote: Omit<Quote, "id" | "createdAt" | "updatedAt">
   ): Promise<Quote> {
-    return this.fetchApi<Quote>(`/api/quotes`, {
+    return this.fetchApi<Quote>(`/quotes`, {
       method: "POST",
       body: JSON.stringify(quote),
     });
@@ -209,7 +255,7 @@ class BackendApiService {
    * Teklif güncelle
    */
   async updateQuote(id: string, quote: Partial<Quote>): Promise<Quote> {
-    return this.fetchApi<Quote>(`/api/quotes/${id}`, {
+    return this.fetchApi<Quote>(`/quotes/${id}`, {
       method: "PUT",
       body: JSON.stringify(quote),
     });
@@ -219,7 +265,7 @@ class BackendApiService {
    * Teklif sil
    */
   async deleteQuote(id: string): Promise<void> {
-    await this.fetchApi<void>(`/api/quotes/${id}`, { method: "DELETE" });
+    await this.fetchApi<void>(`/quotes/${id}`, { method: "DELETE" });
   }
 
   // ============ NOTIFICATION API'LERİ ============
@@ -228,16 +274,14 @@ class BackendApiService {
    * Kullanıcıya ait bildirimleri getir
    */
   async getNotifications(profileId: string): Promise<Notification[]> {
-    return this.fetchApi<Notification[]>(
-      `/api/notifications/profile/${profileId}`
-    );
+    return this.fetchApi<Notification[]>(`/notifications/profile/${profileId}`);
   }
 
   /**
    * Bildirimi okundu olarak işaretle
    */
   async markNotificationAsRead(id: string): Promise<void> {
-    await this.fetchApi<void>(`/api/notifications/${id}/read`, {
+    await this.fetchApi<void>(`/notifications/${id}/read`, {
       method: "POST",
     });
   }
@@ -246,10 +290,9 @@ class BackendApiService {
    * Tüm bildirimleri okundu olarak işaretle
    */
   async markAllNotificationsAsRead(profileId: string): Promise<void> {
-    await this.fetchApi<void>(
-      `/api/notifications/profile/${profileId}/read-all`,
-      { method: "POST" }
-    );
+    await this.fetchApi<void>(`/notifications/profile/${profileId}/read-all`, {
+      method: "POST",
+    });
   }
 
   // ============ PROFILE API'LERİ ============
@@ -258,14 +301,14 @@ class BackendApiService {
    * Profil bilgilerini getir
    */
   async getProfile(userId: string): Promise<any> {
-    return this.fetchApi<any>(`/api/profiles/${userId}`);
+    return this.fetchApi<any>(`/profiles/${userId}`);
   }
 
   /**
    * Profil güncelle
    */
   async updateProfile(userId: string, profile: any): Promise<any> {
-    return this.fetchApi<any>(`/api/profiles/${userId}`, {
+    return this.fetchApi<any>(`/profiles/${userId}`, {
       method: "PUT",
       body: JSON.stringify(profile),
     });
@@ -274,7 +317,7 @@ class BackendApiService {
   // ============ NEW API'LER ============
 
   async getQuotes(): Promise<QuoteApiResponse[]> {
-    return this.fetchApi<QuoteApiResponse[]>("/api/quotes");
+    return this.fetchApi<QuoteApiResponse[]>("/quotes");
   }
 }
 

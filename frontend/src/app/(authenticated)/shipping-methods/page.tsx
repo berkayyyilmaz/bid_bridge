@@ -6,11 +6,11 @@ import { Plus } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { CrudEditModal } from "@/components/forms/CrudEditModal";
 import { createCrudHook } from "@/hooks/useCrudOperations";
-import { quoteCrudOperations } from "@/services/LookupService";
+import { shippingMethodCrudOperations } from "@/services/LookupService";
 import { getLookupFormConfig } from "@/config/lookup-form-configs";
 import { createTableConfig } from "@/config/table-configs";
-import { Quote } from "@/types/lookup";
-import { QuoteFormData } from "@/config/lookup-form-configs";
+import { ShippingMethod } from "@/types/lookup";
+import { ShippingMethodFormData } from "@/config/lookup-form-configs";
 import {
   Card,
   CardHeader,
@@ -19,45 +19,45 @@ import {
   CardContent,
 } from "@/components/ui/card";
 
-// Quote CRUD Hook
-const useQuoteCrud = createCrudHook<
-  Quote,
-  QuoteFormData,
-  Partial<QuoteFormData>
->(quoteCrudOperations);
+// Shipping Method CRUD Hook
+const useShippingMethodCrud = createCrudHook<
+  ShippingMethod,
+  ShippingMethodFormData,
+  Partial<ShippingMethodFormData>
+>(shippingMethodCrudOperations);
 
-export default function QuotesPage() {
+export default function ShippingMethodsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<Quote | null>(null);
+  const [editingItem, setEditingItem] = useState<ShippingMethod | null>(null);
 
   const {
-    data: quotes,
+    data: shippingMethods,
     loading,
     error,
     createItem,
     updateItem,
     deleteItem,
     refetch,
-  } = useQuoteCrud();
+  } = useShippingMethodCrud();
 
   const handleCreate = () => {
     setEditingItem(null);
     setIsModalOpen(true);
   };
 
-  const handleEdit = (quote: Quote) => {
-    setEditingItem(quote);
+  const handleEdit = (shippingMethod: ShippingMethod) => {
+    setEditingItem(shippingMethod);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (quote: Quote) => {
-    if (confirm("Bu teklifi silmek istediğinizden emin misiniz?")) {
-      await deleteItem(quote.id);
+  const handleDelete = async (shippingMethod: ShippingMethod) => {
+    if (confirm("Bu nakliye yöntemini silmek istediğinizden emin misiniz?")) {
+      await deleteItem(shippingMethod.id);
       refetch();
     }
   };
 
-  const handleSubmit = async (data: QuoteFormData) => {
+  const handleSubmit = async (data: ShippingMethodFormData) => {
     try {
       if (editingItem) {
         await updateItem(editingItem.id, data);
@@ -67,11 +67,12 @@ export default function QuotesPage() {
       setIsModalOpen(false);
       refetch();
     } catch (error) {
-      console.error("Teklif kaydetme hatası:", error);
+      console.error("Nakliye yöntemi kaydetme hatası:", error);
     }
   };
 
-  const formConfig = getLookupFormConfig<QuoteFormData>("quote");
+  const formConfig =
+    getLookupFormConfig<ShippingMethodFormData>("shippingMethod");
 
   if (loading) return <div>Yükleniyor...</div>;
   if (error) return <div>Hata: {error}</div>;
@@ -83,13 +84,15 @@ export default function QuotesPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-3xl font-bold tracking-tight">
-                Teklifler
+                Nakliye Yöntemleri
               </CardTitle>
-              <CardDescription>İş tekliflerini yönetin</CardDescription>
+              <CardDescription>
+                Nakliye yöntemi tanımlarını yönetin
+              </CardDescription>
             </div>
             <Button onClick={handleCreate}>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Teklif
+              Yeni Nakliye Yöntemi
             </Button>
           </div>
         </CardHeader>
@@ -98,8 +101,8 @@ export default function QuotesPage() {
       <Card>
         <CardContent className="p-6">
           <DataTable
-            data={quotes}
-            config={createTableConfig("quote")}
+            data={shippingMethods}
+            config={createTableConfig("shippingMethod")}
             onRowEdit={handleEdit}
             onRowDelete={handleDelete}
           />
@@ -110,20 +113,7 @@ export default function QuotesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         config={formConfig}
-        initialData={
-          editingItem
-            ? {
-                jobId: editingItem.jobId,
-                price: editingItem.price,
-                currency: editingItem.currency,
-                transitTime: editingItem.transitTime,
-                validUntil: editingItem.validUntil,
-                note: editingItem.note,
-                address: editingItem.address,
-                status: editingItem.status,
-              }
-            : undefined
-        }
+        initialData={editingItem ? { name: editingItem.name } : undefined}
         onSubmit={handleSubmit}
         mode={editingItem ? "edit" : "create"}
       />
